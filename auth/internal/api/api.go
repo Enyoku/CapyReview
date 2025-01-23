@@ -14,8 +14,11 @@ type API struct {
 }
 
 func New(db *db.DB) (*API, error) {
+	// Initialize Gin
+	gin.SetMode(gin.DebugMode)
+
 	api := &API{
-		router: gin.Default(),
+		router: gin.New(),
 		db:     db,
 	}
 	api.Endpoints()
@@ -23,15 +26,23 @@ func New(db *db.DB) (*API, error) {
 }
 
 func (api *API) Endpoints() {
+	// Middlewares
 	api.router.Use(headerMiddleware())
-	api.router.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
-	})
+	// TODO(Connect zerolog and gin for logging)
+	api.router.Use(gin.Recovery())
+
+	// Handlers
+	authGroup := api.router.Group("/api/account/")
+	authGroup.GET("", api.HiFunc)
 }
 
 func (api *API) Run(addr string) {
 	log.Printf("Starting server on port %v", addr)
 	api.router.Run(addr)
+}
+
+func (api *API) HiFunc(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"message": "pong",
+	})
 }
