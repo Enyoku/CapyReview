@@ -1,6 +1,7 @@
 package api
 
 import (
+	middleware "authService/internal/api/middlewares"
 	"authService/internal/db"
 	"net/http"
 
@@ -27,8 +28,8 @@ func New(db *db.DB) (*API, error) {
 
 func (api *API) Endpoints() {
 	// Middlewares
-	api.router.Use(headerMiddleware())
-	// TODO(Connect zerolog and gin for logging)
+	api.router.Use(middleware.HeaderMiddleware())
+	api.router.Use(middleware.LoggerMiddleware())
 	api.router.Use(gin.Recovery())
 
 	// Handlers
