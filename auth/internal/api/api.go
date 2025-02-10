@@ -3,10 +3,12 @@ package api
 import (
 	middleware "authService/internal/api/middlewares"
 	"authService/internal/db"
+	"authService/internal/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type API struct {
@@ -34,7 +36,7 @@ func (api *API) Endpoints() {
 
 	// Handlers
 	authGroup := api.router.Group("/api/account/")
-	authGroup.GET("", api.HiFunc)
+	authGroup.GET("", api.addUser)
 }
 
 func (api *API) Run(addr string) {
@@ -42,8 +44,35 @@ func (api *API) Run(addr string) {
 	api.router.Run(addr)
 }
 
-func (api *API) HiFunc(c *gin.Context) {
+func (api *API) addUser(c *gin.Context) {
+	var user models.User
+
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	hashedPassword, err := hashPassword(user.Password)
+	if err != nil {
+		log.Error().Msg("Unable to hash password")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": "something went wrong",
+		})
+		return
+	}
+
+	db.AddUser(c.Request.Context(), api.db, &user, hashedPassword)
+
 	c.JSON(http.StatusOK, gin.H{
-		"message": "pong",
+		"status": "ok",
 	})
+}
+
+func hashPassword(pass string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
+	if err != nil {
+		log.Error().Msg(err.Error())
+		return "", err
+	}
+	return string(hash), err
 }

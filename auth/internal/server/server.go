@@ -21,7 +21,7 @@ func New() (*Server, error) {
 		log.Error().Msg(err.Error())
 	}
 
-	connString := "postgres://" + config.DB.Username + ":" + config.DB.Password + "@" + config.DB.Host + "/" + config.DB.Name
+	connString := "postgres://" + config.DB.Username + ":" + config.DB.Password + "@" + config.DB.Host + config.DB.Port + "/" + config.DB.Name
 
 	db, err := db.New(connString)
 	if err != nil {

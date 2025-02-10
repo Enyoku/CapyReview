@@ -11,6 +11,7 @@ type DBConfig struct {
 	Username string
 	Password string
 	Host     string
+	Port     string
 	Name     string
 }
 
@@ -21,6 +22,7 @@ func New() (*Config, error) {
 			Username: getStringEnv("postgres_user", ""),
 			Password: getStringEnv("postgres_password", ""),
 			Host:     getStringEnv("postgres_host", ""),
+			Port:     getStringEnv("postgres_port", ""),
 			Name:     getStringEnv("postgres_name", ""),
 		},
 	}, nil
