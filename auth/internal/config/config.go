@@ -1,10 +1,14 @@
 package config
 
-import "os"
+import (
+	"os"
+	"time"
+)
 
 type Config struct {
 	Port string
 	DB   *DBConfig
+	JWT  *JWT
 }
 
 type DBConfig struct {
@@ -15,7 +19,14 @@ type DBConfig struct {
 	Name     string
 }
 
+type JWT struct {
+	JWTSecretKey     string
+	JWTExpiresIn     time.Duration
+	RefreshExpiresIn time.Duration
+}
+
 func New() (*Config, error) {
+	day := 24 * time.Hour
 	return &Config{
 		Port: getStringEnv("port", ":9001"),
 		DB: &DBConfig{
@@ -24,6 +35,11 @@ func New() (*Config, error) {
 			Host:     getStringEnv("postgres_host", ""),
 			Port:     getStringEnv("postgres_port", ""),
 			Name:     getStringEnv("postgres_name", ""),
+		},
+		JWT: &JWT{
+			JWTSecretKey:     getStringEnv("jwt_secret_key", ""),
+			JWTExpiresIn:     day,
+			RefreshExpiresIn: 7 * day,
 		},
 	}, nil
 }
