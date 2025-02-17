@@ -20,3 +20,9 @@ type UserProfileInfo struct {
 	CreatedAt  time.Time `json:"created_at,omitempty"`
 	LastOnline time.Time `json:"last_online,omitempty"`
 }
+
+type Uid struct {
+	Id int `json:"id"`
+}
+
+// Id         int       `json:"-,omitempty"`

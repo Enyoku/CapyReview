@@ -36,7 +36,9 @@ func (api *API) Endpoints() {
 
 	// Handlers
 	authGroup := api.router.Group("/api/account/")
-	authGroup.GET("", api.addUser)
+	authGroup.POST("", api.signUp)
+	authGroup.GET("/me", api.getAccountInfo)
+	authGroup.DELETE("/me", api.deleteAccount)
 }
 
 func (api *API) Run(addr string) {
@@ -44,7 +46,7 @@ func (api *API) Run(addr string) {
 	api.router.Run(addr)
 }
 
-func (api *API) addUser(c *gin.Context) {
+func (api *API) signUp(c *gin.Context) {
 	var user models.User
 
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -66,6 +68,41 @@ func (api *API) addUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status": "ok",
 	})
+}
+
+func (api *API) getAccountInfo(c *gin.Context) {
+	var id models.Uid
+	var user *models.UserProfileInfo
+
+	if err := c.ShouldBindJSON(&id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := db.GetUserInfo(c.Request.Context(), api.db, id.Id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
+}
+
+func (api *API) deleteAccount(c *gin.Context) {
+	var id models.Uid
+
+	if err := c.ShouldBindJSON(&id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := db.DeleteUser(c.Request.Context(), api.db, id.Id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, "deleted")
 }
 
 func hashPassword(pass string) (string, error) {
