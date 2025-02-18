@@ -2,6 +2,7 @@ package api
 
 import (
 	middleware "authService/internal/api/middlewares"
+	"authService/internal/config"
 	"authService/internal/db"
 	"authService/internal/models"
 	"net/http"
@@ -14,15 +15,17 @@ import (
 type API struct {
 	router *gin.Engine
 	db     *db.DB
+	jwt    *config.JWT
 }
 
-func New(db *db.DB) (*API, error) {
+func New(db *db.DB, jwt *config.JWT) (*API, error) {
 	// Initialize Gin
 	gin.SetMode(gin.DebugMode)
 
 	api := &API{
 		router: gin.New(),
 		db:     db,
+		jwt:    jwt,
 	}
 	api.Endpoints()
 	return api, nil
@@ -32,13 +35,27 @@ func (api *API) Endpoints() {
 	// Middlewares
 	api.router.Use(middleware.HeaderMiddleware())
 	api.router.Use(middleware.LoggerMiddleware())
+
 	api.router.Use(gin.Recovery())
 
-	// Handlers
+	// Public routes
+	api.router.POST("/api/login", api.login)
+	api.router.POST("/api/register", api.register)
+
+	// Protected routes
 	authGroup := api.router.Group("/api/account/")
-	authGroup.POST("", api.signUp)
-	authGroup.GET("/me", api.getAccountInfo)
-	authGroup.DELETE("/me", api.deleteAccount)
+	authGroup.Use(middleware.RequiredRole(api.jwt, "user", "admin"))
+	{
+		authGroup.GET("/me", api.getAccountInfo)
+		authGroup.DELETE("/me", api.deleteAccount)
+	}
+
+	// Private routes
+	admin := api.router.Group("/api/admin")
+	admin.Use(middleware.RequiredRole(api.jwt, "admin"))
+	{
+		admin.GET("/dashboard", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"msg": "Admin dashboard"}) })
+	}
 }
 
 func (api *API) Run(addr string) {
@@ -46,11 +63,22 @@ func (api *API) Run(addr string) {
 	api.router.Run(addr)
 }
 
-func (api *API) signUp(c *gin.Context) {
+func (api *API) register(c *gin.Context) {
 	var user models.User
 
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Проверка email и username на уникальность
+	if _, exists := db.FindUserByEmail(c.Request.Context(), api.db, user.Email); exists {
+		c.JSON(http.StatusConflict, gin.H{"error": "email already exists"})
+		return
+	}
+
+	if _, exists := db.FindUserByUsername(c.Request.Context(), api.db, user.Username); exists {
+		c.JSON(http.StatusConflict, gin.H{"error": "username already exists"})
 		return
 	}
 
@@ -63,11 +91,22 @@ func (api *API) signUp(c *gin.Context) {
 		return
 	}
 
-	db.AddUser(c.Request.Context(), api.db, &user, hashedPassword)
+	id, err := db.AddUser(c.Request.Context(), api.db, &user, hashedPassword)
+	if err != nil || id == 0 {
+		log.Error().Msg("Unable to create user")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": "something went wrong",
+		})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"status": "ok",
+	c.JSON(http.StatusCreated, gin.H{
+		"msg": "registered",
 	})
+}
+
+func (api *API) login(c *gin.Context) {
+
 }
 
 func (api *API) getAccountInfo(c *gin.Context) {

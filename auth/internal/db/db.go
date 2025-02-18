@@ -67,15 +67,17 @@ func FindUserByEmail(ctx context.Context, db *DB, email string) (models.User, bo
 	var user models.User
 
 	query := `
-	SELECT id, email, username, pic, bio, created_at, last_online, role FROM users
+	SELECT id, email, username, password, pic, bio, created_at, last_online, role FROM users
 	WHERE email = $1; 
 	`
 
 	err := db.pool.QueryRow(ctx, query, email).Scan(
 		&user.Id,
+		&user.Email,
 		&user.Username,
-		&user.BIO,
+		&user.Password,
 		&user.Picture,
+		&user.BIO,
 		&user.CreatedAt,
 		&user.LastOnline,
 		&user.Role,
@@ -99,9 +101,10 @@ func FindUserByUsername(ctx context.Context, db *DB, username string) (models.Us
 
 	err := db.pool.QueryRow(ctx, query, username).Scan(
 		&user.Id,
+		&user.Email,
 		&user.Username,
-		&user.BIO,
 		&user.Picture,
+		&user.BIO,
 		&user.CreatedAt,
 		&user.LastOnline,
 		&user.Role,
