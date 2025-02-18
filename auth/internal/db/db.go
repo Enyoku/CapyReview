@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
 )
@@ -24,7 +25,7 @@ func New(connString string) (*DB, error) {
 	}, err
 }
 
-func AddUser(ctx context.Context, db *DB, u *models.User, hashedPassword string) error {
+func AddUser(ctx context.Context, db *DB, u *models.User, hashedPassword string) (UserId int, err error) {
 	var id int
 
 	query := ` 
@@ -32,7 +33,7 @@ func AddUser(ctx context.Context, db *DB, u *models.User, hashedPassword string)
 	 VALUES($1,$2,$3,$4,$5)
 	 returning id
 	`
-	err := db.pool.QueryRow(ctx,
+	err = db.pool.QueryRow(ctx,
 		query,
 		u.Email, u.Username,
 		hashedPassword, u.BIO,
@@ -40,9 +41,9 @@ func AddUser(ctx context.Context, db *DB, u *models.User, hashedPassword string)
 
 	if err != nil {
 		log.Error().Msg(err.Error())
-		return nil
+		return 0, nil
 	}
-	return nil
+	return id, nil
 }
 
 func GetUserInfo(ctx context.Context, db *DB, id int) (*models.UserProfileInfo, error) {
@@ -60,6 +61,58 @@ func GetUserInfo(ctx context.Context, db *DB, id int) (*models.UserProfileInfo, 
 	}
 
 	return &user, nil
+}
+
+func FindUserByEmail(ctx context.Context, db *DB, email string) (models.User, bool) {
+	var user models.User
+
+	query := `
+	SELECT id, email, username, pic, bio, created_at, last_online, role FROM users
+	WHERE email = $1; 
+	`
+
+	err := db.pool.QueryRow(ctx, query, email).Scan(
+		&user.Id,
+		&user.Username,
+		&user.BIO,
+		&user.Picture,
+		&user.CreatedAt,
+		&user.LastOnline,
+		&user.Role,
+	)
+	if err == pgx.ErrNoRows {
+		return models.User{}, false
+	} else if err != nil {
+		log.Error().Msgf("Error querying database: %v", err)
+		return models.User{}, false
+	}
+	return user, true
+}
+
+func FindUserByUsername(ctx context.Context, db *DB, username string) (models.User, bool) {
+	var user models.User
+
+	query := `
+	SELECT id, email, username, pic, bio, created_at, last_online, role FROM users
+	WHERE username = $1; 
+	`
+
+	err := db.pool.QueryRow(ctx, query, username).Scan(
+		&user.Id,
+		&user.Username,
+		&user.BIO,
+		&user.Picture,
+		&user.CreatedAt,
+		&user.LastOnline,
+		&user.Role,
+	)
+	if err == pgx.ErrNoRows {
+		return models.User{}, false
+	} else if err != nil {
+		log.Error().Msgf("Error querying database: %v", err)
+		return models.User{}, false
+	}
+	return user, true
 }
 
 func DeleteUser(ctx context.Context, db *DB, id int) error {
