@@ -28,7 +28,7 @@ func New() (*Server, error) {
 		log.Error().Msg(err.Error())
 	}
 
-	api, err := api.New(db)
+	api, err := api.New(db, config.JWT)
 	if err != nil {
 		log.Error().Msg(err.Error())
 	}
