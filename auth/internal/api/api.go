@@ -2,10 +2,13 @@ package api
 
 import (
 	middleware "authService/internal/api/middlewares"
+	"authService/internal/auth"
 	"authService/internal/config"
 	"authService/internal/db"
 	"authService/internal/models"
+	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -48,6 +51,7 @@ func (api *API) Endpoints() {
 	{
 		authGroup.GET("/me", api.getAccountInfo)
 		authGroup.DELETE("/me", api.deleteAccount)
+		authGroup.GET("/logout", api.logout)
 	}
 
 	// Private routes
@@ -106,7 +110,59 @@ func (api *API) register(c *gin.Context) {
 }
 
 func (api *API) login(c *gin.Context) {
+	var loginData models.LoginData
 
+	if err := c.ShouldBindJSON(&loginData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid credentials"})
+		return
+	}
+
+	user, exists := db.FindUserByEmail(c.Request.Context(), api.db, loginData.Email)
+	if !exists {
+		c.JSON(http.StatusConflict, gin.H{"error": "this user does not exist"})
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginData.Password)); err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			c.JSON(http.StatusUnauthorized, gin.H{"err": "invalid credentials"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"err": "internal server error"})
+		}
+		return
+	}
+
+	tokenString, err := auth.GenerateToken(&user, *api.jwt)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to generate token"})
+		return
+	}
+
+	cookie := http.Cookie{
+		Name:     "token",
+		Value:    tokenString,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,
+		Expires:  time.Now().Add(24 * time.Hour),
+	}
+
+	c.SetCookie(cookie.Name, cookie.Value, int(cookie.Expires.Unix()-time.Now().Unix()), cookie.Path, cookie.Domain, cookie.Secure, cookie.HttpOnly)
+
+	c.JSON(http.StatusOK, gin.H{"msg": "Login successful"})
+}
+
+func (api *API) logout(c *gin.Context) {
+	cookie := http.Cookie{
+		Name:     "token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,
+		Expires:  time.Now().Add(-1 * time.Hour),
+	}
+	c.SetCookie(cookie.Name, cookie.Value, int(cookie.Expires.Unix()-time.Now().Unix()), cookie.Path, cookie.Domain, cookie.Secure, cookie.HttpOnly)
+	c.JSON(http.StatusOK, gin.H{"msg": "Logout successful"})
 }
 
 func (api *API) getAccountInfo(c *gin.Context) {
