@@ -50,6 +50,7 @@ func (api *API) Endpoints() {
 	authGroup.Use(middleware.RequiredRole(api.jwt, "user", "admin"))
 	{
 		authGroup.GET("/me", api.getAccountInfo)
+		authGroup.PATCH("/me", api.updateAccountInfo)
 		authGroup.DELETE("/me", api.deleteAccount)
 		authGroup.GET("/logout", api.logout)
 	}
@@ -67,6 +68,7 @@ func (api *API) Run(addr string) {
 	api.router.Run(addr)
 }
 
+// POST Хендлер регистрации нового аккаунта
 func (api *API) register(c *gin.Context) {
 	var user models.User
 
@@ -86,7 +88,7 @@ func (api *API) register(c *gin.Context) {
 		return
 	}
 
-	hashedPassword, err := hashPassword(user.Password)
+	hashedPassword, err := auth.HashPassword(user.Password)
 	if err != nil {
 		log.Error().Msg("Unable to hash password")
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -109,6 +111,7 @@ func (api *API) register(c *gin.Context) {
 	})
 }
 
+// POST Хендлер для входа в аккаунт
 func (api *API) login(c *gin.Context) {
 	var loginData models.LoginData
 
@@ -152,6 +155,7 @@ func (api *API) login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"msg": "Login successful"})
 }
 
+// GET Хендлер для выхода из аккаунта
 func (api *API) logout(c *gin.Context) {
 	cookie := http.Cookie{
 		Name:     "token",
@@ -165,6 +169,7 @@ func (api *API) logout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"msg": "Logout successful"})
 }
 
+// GET Хендлер предоставляющий информацию о пользователе
 func (api *API) getAccountInfo(c *gin.Context) {
 	var id models.Uid
 	var user *models.UserProfileInfo
@@ -183,6 +188,12 @@ func (api *API) getAccountInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// PATCH Хендлер обновления данных аккаунта
+func (api *API) updateAccountInfo(c *gin.Context) {
+
+}
+
+// DELETE Хендлер удаления аккаунта
 func (api *API) deleteAccount(c *gin.Context) {
 	var id models.Uid
 
@@ -198,13 +209,4 @@ func (api *API) deleteAccount(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, "deleted")
-}
-
-func hashPassword(pass string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
-	if err != nil {
-		log.Error().Msg(err.Error())
-		return "", err
-	}
-	return string(hash), err
 }

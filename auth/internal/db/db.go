@@ -1,9 +1,11 @@
 package db
 
 import (
+	"authService/internal/auth"
 	"authService/internal/models"
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -140,4 +142,43 @@ func DeleteUser(ctx context.Context, db *DB, id int) error {
 	return nil
 }
 
-// func updateUserInfo()
+func UpdateUserInfo(ctx context.Context, db *DB, user *models.User) error {
+	query := `
+		UPDATE users
+		SET
+		username = COALESCE(NULLIF($1, ''), username)
+		email = COALESCE(NULLIF($2, ''), email)
+		password = COALESCE(NULLIF($3, ''), password)
+		bio = COALESCE(NULLIF($4, ''), bio)
+		pic = COALESCE(NULLIF($5, ''), pic)
+		last_online = COALESCE(NULLIF($6, ''), last_online)
+		WHERE id = $7
+		RETURNING id
+	`
+
+	// Хеширование пароля, если он был предоставлен
+	var hashedPassword string
+	if user.Password != "" {
+		hashedPasswordBytes, err := auth.HashPassword(user.Password)
+		if err != nil {
+			return err
+		}
+		hashedPassword = string(hashedPasswordBytes)
+	} else {
+		hashedPassword = user.Password
+	}
+
+	// Устанавливаем время последнего входа
+	lastOnline := time.Now()
+
+	err := db.pool.QueryRow(ctx, query, user.Username, user.Email, hashedPassword, user.BIO, user.Picture, lastOnline).Scan(&user.Id)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return auth.ErrUserNotFound
+		}
+		log.Error().Msgf("Error through updating user: %v", err)
+		return err
+	}
+
+	return nil
+}

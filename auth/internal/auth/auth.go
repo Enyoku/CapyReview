@@ -8,10 +8,12 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var ErrInvalidToken = errors.New("invalid_token")
 var ErrUnsupportedKey = errors.New("unsupported signing method")
+var ErrUserNotFound = errors.New("user not found")
 var ErrTokenExpired = errors.New("token expired")
 var ErrUnauthorized = errors.New("unauthorized")
 var ErrTokenGeneration = errors.New("failed to generate token")
@@ -68,4 +70,13 @@ func ParseToken(tokenString string, config config.JWT) (*models.Claims, error) {
 	}
 
 	return nil, ErrInvalidToken
+}
+
+func HashPassword(pass string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
+	if err != nil {
+		log.Error().Msg(err.Error())
+		return "", err
+	}
+	return string(hash), err
 }
