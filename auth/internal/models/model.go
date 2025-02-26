@@ -28,6 +28,15 @@ type UserProfileInfo struct {
 	LastOnline pgtype.Timestamptz `json:"last_online,omitempty"`
 }
 
+type UserUpdate struct {
+	Email      string             `json:"email,omitempty" binding:"omitempty,email"`
+	Username   string             `json:"username,omitempty" binding:"omitempty"`
+	Password   string             `json:"password,omitempty" binding:"omitempty"`
+	BIO        string             `json:"bio,omitempty"`
+	Picture    string             `json:"pic,omitempty"`
+	LastOnline pgtype.Timestamptz `json:"last_online,omitempty"`
+}
+
 type LoginData struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required,min=8"`
@@ -38,8 +47,4 @@ type Claims struct {
 	UserId int
 	Role   string
 	jwt.RegisteredClaims
-}
-
-type Uid struct {
-	Id int `json:"id"`
 }
