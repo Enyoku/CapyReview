@@ -142,18 +142,20 @@ func DeleteUser(ctx context.Context, db *DB, id int) error {
 	return nil
 }
 
-func UpdateUserInfo(ctx context.Context, db *DB, user *models.User) error {
+func UpdateUserInfo(ctx context.Context, db *DB, user *models.UserUpdate, id int) error {
+	var userId int
+
 	query := `
 		UPDATE users
-		SET
-		username = COALESCE(NULLIF($1, ''), username)
-		email = COALESCE(NULLIF($2, ''), email)
-		password = COALESCE(NULLIF($3, ''), password)
-		bio = COALESCE(NULLIF($4, ''), bio)
-		pic = COALESCE(NULLIF($5, ''), pic)
-		last_online = COALESCE(NULLIF($6, ''), last_online)
+		SET 
+		email = COALESCE(NULLIF($1, ''), email),
+		username = COALESCE(NULLIF($2, ''), username),
+		password = COALESCE(NULLIF($3, ''), password),
+		pic = COALESCE(NULLIF($4, ''), pic),
+		bio = COALESCE(NULLIF($5, ''), bio),
+		last_online = $6
 		WHERE id = $7
-		RETURNING id
+		RETURNING id;
 	`
 
 	// Хеширование пароля, если он был предоставлен
@@ -171,7 +173,7 @@ func UpdateUserInfo(ctx context.Context, db *DB, user *models.User) error {
 	// Устанавливаем время последнего входа
 	lastOnline := time.Now()
 
-	err := db.pool.QueryRow(ctx, query, user.Username, user.Email, hashedPassword, user.BIO, user.Picture, lastOnline).Scan(&user.Id)
+	err := db.pool.QueryRow(ctx, query, user.Email, user.Username, hashedPassword, user.Picture, user.BIO, lastOnline, id).Scan(&userId)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return auth.ErrUserNotFound
