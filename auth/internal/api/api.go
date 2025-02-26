@@ -171,15 +171,14 @@ func (api *API) logout(c *gin.Context) {
 
 // GET Хендлер предоставляющий информацию о пользователе
 func (api *API) getAccountInfo(c *gin.Context) {
-	var id models.Uid
 	var user *models.UserProfileInfo
 
-	if err := c.ShouldBindJSON(&id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	userId, exist := c.Get("user_id")
+	if !exist {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user_id not found in context"})
 	}
 
-	user, err := db.GetUserInfo(c.Request.Context(), api.db, id.Id)
+	user, err := db.GetUserInfo(c.Request.Context(), api.db, userId.(int))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -190,19 +189,36 @@ func (api *API) getAccountInfo(c *gin.Context) {
 
 // PATCH Хендлер обновления данных аккаунта
 func (api *API) updateAccountInfo(c *gin.Context) {
+	userId, exist := c.Get("user_id")
+	if !exist {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user_id not found in context"})
+	}
 
-}
-
-// DELETE Хендлер удаления аккаунта
-func (api *API) deleteAccount(c *gin.Context) {
-	var id models.Uid
-
-	if err := c.ShouldBindJSON(&id); err != nil {
+	var updatedData models.UserUpdate
+	if err := c.ShouldBindJSON(&updatedData); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err := db.DeleteUser(c.Request.Context(), api.db, id.Id)
+	err := db.UpdateUserInfo(c.Request.Context(), api.db, &updatedData, userId.(int))
+	if err != nil {
+		if err != auth.ErrUserNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"msg": "User updated successfully", "user": updatedData})
+}
+
+// DELETE Хендлер удаления аккаунта
+func (api *API) deleteAccount(c *gin.Context) {
+	userId, exist := c.Get("user_id")
+	if !exist {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user_id not found in context"})
+	}
+
+	err := db.DeleteUser(c.Request.Context(), api.db, userId.(int))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
