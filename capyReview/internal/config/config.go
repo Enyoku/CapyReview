@@ -1,6 +1,7 @@
 package config
 
 type Config struct {
+	Port string
 }
 
 func New() *Config {
