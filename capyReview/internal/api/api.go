@@ -1,6 +1,7 @@
 package api
 
 import (
+	"APIGateway/internal/api/middleware"
 	"APIGateway/internal/config"
 	"net/http"
 
@@ -30,6 +31,7 @@ func (api *API) Run(addr string) {
 
 func (api *API) endpoints() {
 	// Middleware
+	api.router.Use(middleware.LoggerMiddleware())
 
 	// Router Groups
 	public := api.router.Group("/")
