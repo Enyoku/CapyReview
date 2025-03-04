@@ -5,5 +5,7 @@ type Config struct {
 }
 
 func New() *Config {
-	return &Config{}
+	return &Config{
+		Port: ":8080",
+	}
 }

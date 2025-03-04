@@ -11,9 +11,13 @@ type Server struct {
 }
 
 func New() *Server {
-	api := api.New()
 
 	config := config.New()
+
+	api, err := api.New(config)
+	if err != nil {
+
+	}
 
 	return &Server{
 		API:    api,
