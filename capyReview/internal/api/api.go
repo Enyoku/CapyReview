@@ -5,6 +5,7 @@ import (
 	"APIGateway/internal/config"
 	"net/http"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -32,6 +33,11 @@ func (api *API) Run(addr string) {
 func (api *API) endpoints() {
 	// Middleware
 	api.router.Use(middleware.LoggerMiddleware())
+	api.router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:8080", "http://localhost:9001"},
+		AllowCredentials: true,
+		AllowHeaders:     []string{"Authorization", "Content-Type"},
+	}))
 
 	// Router Groups
 	public := api.router.Group("/")
