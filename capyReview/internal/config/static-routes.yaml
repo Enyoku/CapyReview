@@ -1,4 +1,13 @@
-routes:
-  - path: /auth/*
-    service: auth-service
-    url: http://auth-service:9001
+services:
+  auth_service:
+    url: "http://localhost:9001"
+    routes:
+      - path: "/auth/login"
+        target: "/login"
+      - path: "/auth/register"
+        target: "/register"
+  review_service:
+    url: "http://localhost:9002"
+    routes:
+      - path: "/review/hi"
+        target: "/test"

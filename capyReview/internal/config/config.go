@@ -1,7 +1,15 @@
 package config
 
+import "APIGateway/internal/models"
+
 type Config struct {
-	Port string
+	Host      string
+	Port      string
+	SecretKey string
+}
+
+type ServiceConfig struct {
+	Services map[string]models.Service `yaml:"services"`
 }
 
 func New() *Config {
