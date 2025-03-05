@@ -1,9 +1,11 @@
 package config
 
-import "APIGateway/internal/models"
+import (
+	"APIGateway/internal/models"
+	"os"
+)
 
 type Config struct {
-	Host      string
 	Port      string
 	SecretKey string
 }
@@ -14,6 +16,15 @@ type ServiceConfig struct {
 
 func New() *Config {
 	return &Config{
-		Port: ":8080",
+		Port:      getStringEnv("port", ":8080"),
+		SecretKey: getStringEnv("secret_key", ""),
+	}
+}
+
+func getStringEnv(key string, defaultVal string) string {
+	if value, exist := os.LookupEnv(key); exist {
+		return value
+	} else {
+		return defaultVal
 	}
 }
