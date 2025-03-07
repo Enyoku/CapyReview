@@ -3,7 +3,11 @@ package server
 import (
 	"APIGateway/internal/api"
 	"APIGateway/internal/config"
+	"path/filepath"
 )
+
+// Path to find yaml config file
+var yamlPath string = filepath.Join("internal", "config", "static-routes.yaml")
 
 type Server struct {
 	API    *api.API
@@ -12,7 +16,7 @@ type Server struct {
 
 func New() *Server {
 
-	config := config.New()
+	config := config.New(yamlPath)
 
 	api, err := api.New(config)
 	if err != nil {
@@ -26,5 +30,5 @@ func New() *Server {
 }
 
 func (s *Server) Run() {
-	s.API.Run(s.Config.Port)
+	s.API.Run(s.Config.Env.Port)
 }

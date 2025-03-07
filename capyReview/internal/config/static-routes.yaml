@@ -2,10 +2,12 @@ services:
   auth_service:
     url: "http://localhost:9001"
     routes:
-      - path: "/auth/login"
+      - path: "/api/login"
         target: "/login"
-      - path: "/auth/register"
+      - path: "/api/register"
         target: "/register"
+      - path: "/api/account/me"
+        target: "/me"
   review_service:
     url: "http://localhost:9002"
     routes:

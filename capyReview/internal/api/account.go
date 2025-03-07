@@ -1,17 +1,22 @@
 package api
 
 import (
+	"APIGateway/internal/config"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 type AccountGroup struct {
-	group *gin.RouterGroup
+	group  *gin.RouterGroup
+	config *config.Config
 }
 
-func newAccountGroup(g *gin.RouterGroup) *AccountGroup {
-	return &AccountGroup{group: g}
+func newAccountGroup(g *gin.RouterGroup, config *config.Config) *AccountGroup {
+	return &AccountGroup{
+		group:  g,
+		config: config,
+	}
 }
 
 func (g *AccountGroup) RegisterRoutes() {

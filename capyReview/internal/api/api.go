@@ -42,7 +42,7 @@ func (api *API) endpoints() {
 	// Router Groups
 	public := api.router.Group("/")
 
-	accountGroup := newAccountGroup(api.router.Group("/user"))
+	accountGroup := newAccountGroup(api.router.Group("/user"), api.config)
 	accountGroup.RegisterRoutes()
 
 	// Public Handlers
