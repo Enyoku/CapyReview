@@ -26,9 +26,28 @@ func newAccountGroup(g *gin.RouterGroup, config *config.Config) *AccountGroup {
 
 func (a *AccountGroup) RegisterRoutes() {
 	for _, route := range a.config.Services.Services["auth_service"].Routes {
-		a.group.Any(route.Path, func(c *gin.Context) {
-			a.proxyRequest(c, "auth_service", route.Target)
-		})
+		for _, method := range route.Methods {
+			switch method {
+			case "GET":
+				a.group.GET(route.Path, func(c *gin.Context) {
+					a.proxyRequest(c, "auth_service", route.Target)
+				})
+			case "POST":
+				a.group.POST(route.Path, func(c *gin.Context) {
+					a.proxyRequest(c, "auth_service", route.Target)
+				})
+			case "PATCH":
+				a.group.PATCH(route.Path, func(c *gin.Context) {
+					a.proxyRequest(c, "auth_service", route.Target)
+				})
+			case "DELETE":
+				a.group.DELETE(route.Path, func(c *gin.Context) {
+					a.proxyRequest(c, "auth_service", route.Target)
+				})
+			default:
+				log.Error().Msgf("Unsupported method %s for route %s", method, route.Path)
+			}
+		}
 	}
 	a.group.GET("/", a.hiFunc)
 	a.group.POST("/login", a.loginHandler)
@@ -89,6 +108,10 @@ func (a *AccountGroup) proxyRequest(c *gin.Context, serviceName, target string) 
 		return
 	}
 	defer resp.Body.Close()
+
+	for _, cookie := range resp.Cookies() {
+		c.SetCookie(cookie.Name, cookie.Value, cookie.MaxAge, cookie.Path, cookie.Domain, cookie.Secure, cookie.HttpOnly)
+	}
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {

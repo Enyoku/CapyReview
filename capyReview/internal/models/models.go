@@ -6,6 +6,7 @@ type Service struct {
 }
 
 type Route struct {
-	Path   string `yaml:"path"`
-	Target string `yaml:"target"`
+	Path    string   `yaml:"path"`
+	Target  string   `yaml:"target"`
+	Methods []string `yaml:"methods"`
 }

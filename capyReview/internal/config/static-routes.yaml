@@ -4,12 +4,16 @@ services:
     routes:
       - path: "/api/login"
         target: "/login"
+        methods: ["POST"]
       - path: "/api/register"
         target: "/register"
+        methods: ["POST"]
       - path: "/api/account/me"
         target: "/me"
+        methods: ["GET", "PATCH", "DELETE"]
   review_service:
     url: "http://localhost:9002"
     routes:
       - path: "/review/hi"
         target: "/test"
+        methods: ["GET"]
