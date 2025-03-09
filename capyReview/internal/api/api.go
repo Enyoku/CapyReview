@@ -36,6 +36,7 @@ func (api *API) endpoints() {
 	api.router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:8080", "http://localhost:9001"},
 		AllowCredentials: true,
+		AllowMethods:     []string{"GET", "POST", "PATCH", "DELETE"},
 		AllowHeaders:     []string{"Authorization", "Content-Type"},
 	}))
 
