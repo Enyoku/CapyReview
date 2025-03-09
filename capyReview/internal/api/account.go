@@ -1,12 +1,9 @@
 package api
 
 import (
+	"APIGateway/internal/common"
 	"APIGateway/internal/config"
-	"bytes"
-	"fmt"
-	"io"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -30,19 +27,19 @@ func (a *AccountGroup) RegisterRoutes() {
 			switch method {
 			case "GET":
 				a.group.GET(route.Path, func(c *gin.Context) {
-					a.proxyRequest(c, "auth_service", route.Target)
+					common.ProxyRequest(c, a.config, "auth_service", route.Target)
 				})
 			case "POST":
 				a.group.POST(route.Path, func(c *gin.Context) {
-					a.proxyRequest(c, "auth_service", route.Target)
+					common.ProxyRequest(c, a.config, "auth_service", route.Target)
 				})
 			case "PATCH":
 				a.group.PATCH(route.Path, func(c *gin.Context) {
-					a.proxyRequest(c, "auth_service", route.Target)
+					common.ProxyRequest(c, a.config, "auth_service", route.Target)
 				})
 			case "DELETE":
 				a.group.DELETE(route.Path, func(c *gin.Context) {
-					a.proxyRequest(c, "auth_service", route.Target)
+					common.ProxyRequest(c, a.config, "auth_service", route.Target)
 				})
 			default:
 				log.Error().Msgf("Unsupported method %s for route %s", method, route.Path)
@@ -50,74 +47,8 @@ func (a *AccountGroup) RegisterRoutes() {
 		}
 	}
 	a.group.GET("/", a.hiFunc)
-	a.group.POST("/login", a.loginHandler)
 }
 
 func (a *AccountGroup) hiFunc(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"msg": "hi"})
-}
-
-func (a *AccountGroup) loginHandler(c *gin.Context) {
-	a.proxyRequest(c, "auth_service", "/login")
-}
-
-func (a *AccountGroup) proxyRequest(c *gin.Context, serviceName, target string) {
-	service, ok := a.config.Services.Services[serviceName]
-	if !ok || service.URL == "" {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Service %s not found dor URL is empty", serviceName)})
-		return
-	}
-
-	var path string
-	for _, route := range service.Routes {
-		if route.Target == target {
-			path = route.Path
-			break
-		}
-	}
-
-	if path == "" {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Route not found for target" + target})
-	}
-
-	targetUrl := service.URL + path
-	log.Info().Msgf("%v", targetUrl)
-
-	body, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read request body"})
-		return
-	}
-
-	c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
-
-	req, err := http.NewRequest(c.Request.Method, targetUrl, bytes.NewBuffer(body))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Faied to create request"})
-		return
-	}
-
-	for k, v := range c.Request.Header {
-		req.Header[k] = v
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to reach the target service"})
-		return
-	}
-	defer resp.Body.Close()
-
-	for _, cookie := range resp.Cookies() {
-		c.SetCookie(cookie.Name, cookie.Value, cookie.MaxAge, cookie.Path, cookie.Domain, cookie.Secure, cookie.HttpOnly)
-	}
-
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to response body"})
-		return
-	}
-
-	c.Data(resp.StatusCode, strings.Split(c.Request.Header.Get("Content-Type"), ";")[0], respBody)
 }
