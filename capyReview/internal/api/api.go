@@ -41,15 +41,16 @@ func (api *API) endpoints() {
 	}))
 
 	// Router Groups
-	public := api.router.Group("/")
+	apiGroup := api.router.Group("/api")
+	{
+		accountGroup := newAccountGroup(apiGroup, api.config)
+		accountGroup.RegisterRoutes()
 
-	accountGroup := newAccountGroup(api.router.Group("/user"), api.config)
-	accountGroup.RegisterRoutes()
-
-	// Public Handlers
-	public.GET("/", api.hiFunc)
+		// Public Handlers
+		apiGroup.GET("/ping", api.hiFunc)
+	}
 }
 
 func (api *API) hiFunc(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"msg": "hi"})
+	c.JSON(http.StatusOK, gin.H{"msg": "pong"})
 }
