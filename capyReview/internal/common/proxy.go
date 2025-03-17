@@ -10,7 +10,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ProxyRequest(c *gin.Context, cfg *config.Config, serviceName, target string) {
+type Proxy interface {
+	ProxyRequest(c *gin.Context, cfg *config.Config, serviceName, target string)
+}
+
+// Реализация интерфейса
+type DefaultProxy struct{}
+
+func (p *DefaultProxy) ProxyRequest(c *gin.Context, cfg *config.Config, serviceName, target string) {
 	// Получаем описание сервиса из конфигурации
 	service, ok := cfg.Services.Services[serviceName]
 	if !ok || service.URL == "" {

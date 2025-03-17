@@ -11,12 +11,14 @@ import (
 type AccountGroup struct {
 	group  *gin.RouterGroup
 	config *config.Config
+	proxy  common.Proxy
 }
 
-func newAccountGroup(g *gin.RouterGroup, config *config.Config) *AccountGroup {
+func NewAccountGroup(g *gin.RouterGroup, config *config.Config, proxy common.Proxy) *AccountGroup {
 	return &AccountGroup{
 		group:  g.Group("/auth"),
 		config: config,
+		proxy:  proxy,
 	}
 }
 
@@ -26,19 +28,19 @@ func (a *AccountGroup) RegisterRoutes() {
 			switch method {
 			case "GET":
 				a.group.GET(route.Target, func(c *gin.Context) {
-					common.ProxyRequest(c, a.config, "auth_service", route.Target)
+					a.proxy.ProxyRequest(c, a.config, "auth_service", route.Target)
 				})
 			case "POST":
 				a.group.POST(route.Target, func(c *gin.Context) {
-					common.ProxyRequest(c, a.config, "auth_service", route.Target)
+					a.proxy.ProxyRequest(c, a.config, "auth_service", route.Target)
 				})
 			case "PATCH":
 				a.group.PATCH(route.Target, func(c *gin.Context) {
-					common.ProxyRequest(c, a.config, "auth_service", route.Target)
+					a.proxy.ProxyRequest(c, a.config, "auth_service", route.Target)
 				})
 			case "DELETE":
 				a.group.DELETE(route.Target, func(c *gin.Context) {
-					common.ProxyRequest(c, a.config, "auth_service", route.Target)
+					a.proxy.ProxyRequest(c, a.config, "auth_service", route.Target)
 				})
 			default:
 				log.Error().Msgf("Unsupported method %s for route %s", method, route.Path)

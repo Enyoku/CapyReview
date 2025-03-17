@@ -2,6 +2,7 @@ package api
 
 import (
 	"APIGateway/internal/api/middleware"
+	"APIGateway/internal/common"
 	"APIGateway/internal/config"
 	"net/http"
 
@@ -40,10 +41,13 @@ func (api *API) endpoints() {
 		AllowHeaders:     []string{"Authorization", "Content-Type"},
 	}))
 
+	// Proxy
+	realProxy := &common.DefaultProxy{}
+
 	// Router Groups
 	apiGroup := api.router.Group("/api")
 	{
-		accountGroup := newAccountGroup(apiGroup, api.config)
+		accountGroup := NewAccountGroup(apiGroup, api.config, realProxy)
 		accountGroup.RegisterRoutes()
 
 		// Public Handlers
