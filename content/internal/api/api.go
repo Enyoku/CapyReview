@@ -1,6 +1,10 @@
 package api
 
-import "github.com/gin-gonic/gin"
+import (
+	"contentService/internal/middleware"
+
+	"github.com/gin-gonic/gin"
+)
 
 type API struct {
 	router *gin.Engine
@@ -17,6 +21,7 @@ func New() (*API, error) {
 
 func (a *API) Endpoints() {
 	// Middlewares
+	a.router.Use(middleware.LoggingMiddleware())
 
 	a.router.Use(gin.Recovery())
 
