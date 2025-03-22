@@ -3,6 +3,7 @@ package server
 import (
 	"contentService/internal/api"
 	"contentService/internal/config"
+	"contentService/internal/db"
 
 	"github.com/rs/zerolog/log"
 )
@@ -20,8 +21,20 @@ func New() (*Server, error) {
 		log.Fatal().Msg("")
 	}
 
-	// Инициализация API
-	api, err := api.New()
+	//
+	db, err := db.NewMongoClient(config.MongoURI)
+	if err != nil {
+		return nil, err
+	}
+
+	// Инициализация зависимостей
+	movieService, err := initializeDependencies(db)
+	if err != nil {
+		return nil, err
+	}
+
+	// Создание API
+	api, err := api.New(movieService)
 	if err != nil {
 		log.Fatal().Msg("")
 	}
