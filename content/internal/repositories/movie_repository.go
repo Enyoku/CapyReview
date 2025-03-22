@@ -13,7 +13,7 @@ import (
 type MovieRepository interface {
 	Create(ctx context.Context, movie *models.Movie) error
 	GetByID(ctx context.Context, id string) (*models.Movie, error)
-	Update(ctx context.Context, id string, updates map[string]interface{}) error
+	Update(ctx context.Context, id string, movie *models.Movie) error
 	Delete(ctx context.Context, id string) error
 }
 
@@ -51,13 +51,13 @@ func (r *movieRepository) GetByID(ctx context.Context, id string) (*models.Movie
 }
 
 // Обновляет фильм по идентификатору
-func (r *movieRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+func (r *movieRepository) Update(ctx context.Context, id string, movie *models.Movie) error {
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
 	}
 
-	_, err = r.collection.UpdateOne(ctx, bson.M{"_id": objectId}, bson.M{"$set": updates})
+	_, err = r.collection.UpdateOne(ctx, bson.M{"_id": objectId}, bson.M{"$set": movie})
 	return err
 }
 
