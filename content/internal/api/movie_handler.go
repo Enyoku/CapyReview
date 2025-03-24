@@ -50,7 +50,7 @@ func (h *MovieHandler) GetMovie(c *gin.Context) {
 
 func (h *MovieHandler) UpdateMovie(c *gin.Context) {
 	id := c.Param("id")
-	var movie models.Movie
+	var movie models.MovieUpdate
 
 	//
 	if err := c.ShouldBindJSON(&movie); err != nil {

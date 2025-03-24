@@ -16,40 +16,44 @@ func NewMovieService(repo repositories.MovieRepository) *MovieService {
 }
 
 func (s *MovieService) CreateMovie(ctx context.Context, movie *models.Movie) error {
-	return s.repo.Create(ctx, movie)
+	if movie.IsValid() {
+		return s.repo.Create(ctx, movie)
+	} else {
+		return errors.New("invalid credentials")
+	}
 }
 
 func (s *MovieService) GetMovie(ctx context.Context, id string) (*models.Movie, error) {
 	return s.repo.GetByID(ctx, id)
 }
 
-func (s *MovieService) UpdateMovie(ctx context.Context, id string, movie *models.Movie) error {
-	//
+func (s *MovieService) UpdateMovie(ctx context.Context, id string, movie *models.MovieUpdate) error {
+	// Получаем текущий фильм из бд
 	existingMovie, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return errors.New("movie not found")
 	}
 
-	//
-	if movie.Title != "" {
-		existingMovie.Title = movie.Title
+	// Применяем обновления
+	if movie.Title != nil {
+		existingMovie.Title = *movie.Title
 	}
-	if movie.Description != "" {
-		existingMovie.Description = movie.Description
+	if movie.Description != nil {
+		existingMovie.Description = *movie.Description
 	}
-	if !movie.ReleaseDate.IsZero() {
-		existingMovie.ReleaseDate = movie.ReleaseDate
+	if movie.ReleaseDate != nil {
+		existingMovie.ReleaseDate = *movie.ReleaseDate
 	}
-	if movie.Rating != 0 {
-		existingMovie.Rating = movie.Rating
-	}
-
-	//
-	if err := s.repo.Update(ctx, id, existingMovie); err != nil {
-		return errors.New("Failed to update movie")
+	if movie.Rating != nil {
+		existingMovie.Rating = *movie.Rating
 	}
 
-	return nil
+	// Проверяем обновления
+	if !existingMovie.IsValid() {
+		return errors.New("invalid movie data after update")
+	}
+
+	return s.repo.Update(ctx, id, existingMovie)
 }
 
 func (s *MovieService) DeleteMovie(ctx context.Context, id string) error {
