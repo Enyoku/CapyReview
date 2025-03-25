@@ -11,8 +11,8 @@ type SeriesService struct {
 	repo repositories.SeriesRepository
 }
 
-func NewSerialService(repo repositories.SeriesRepository) (*SeriesService, error) {
-	return &SeriesService{repo: repo}, nil
+func NewSerialService(repo repositories.SeriesRepository) *SeriesService {
+	return &SeriesService{repo: repo}
 }
 
 func (s *SeriesService) Create(ctx context.Context, series models.Series) error {

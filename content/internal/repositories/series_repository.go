@@ -20,7 +20,7 @@ type seriesRepository struct {
 	collection *mongo.Collection
 }
 
-func NewSeriesRepository(client mongo.Client) SeriesRepository {
+func NewSeriesRepository(client *mongo.Client) SeriesRepository {
 	return &seriesRepository{
 		collection: client.Database("entertainment").Collection("series"),
 	}
