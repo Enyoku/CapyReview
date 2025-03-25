@@ -16,10 +16,10 @@ func NewMovieService(repo repositories.MovieRepository) *MovieService {
 }
 
 func (s *MovieService) CreateMovie(ctx context.Context, movie *models.Movie) error {
-	if movie.IsValid() {
-		return s.repo.Create(ctx, movie)
+	if _, err := movie.IsValid(); err != nil {
+		return err
 	} else {
-		return errors.New("invalid credentials")
+		return s.repo.Create(ctx, movie)
 	}
 }
 
@@ -49,8 +49,8 @@ func (s *MovieService) UpdateMovie(ctx context.Context, id string, movie *models
 	}
 
 	// Проверяем обновления
-	if !existingMovie.IsValid() {
-		return errors.New("invalid movie data after update")
+	if _, err := existingMovie.IsValid(); err != nil {
+		return err
 	}
 
 	return s.repo.Update(ctx, id, existingMovie)
