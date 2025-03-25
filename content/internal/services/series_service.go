@@ -15,7 +15,7 @@ func NewSerialService(repo repositories.SeriesRepository) *SeriesService {
 	return &SeriesService{repo: repo}
 }
 
-func (s *SeriesService) Create(ctx context.Context, series models.Series) error {
+func (s *SeriesService) Create(ctx context.Context, series *models.Series) error {
 	// Проверяем полученные данные
 	if series.IsValid() {
 		return s.repo.Create(ctx, series)
@@ -28,7 +28,7 @@ func (s *SeriesService) GetByID(ctx context.Context, id string) (*models.Series,
 	return s.repo.GetByID(ctx, id)
 }
 
-func (s *SeriesService) Update(ctx context.Context, id string, series models.SeriesUpdate) error {
+func (s *SeriesService) Update(ctx context.Context, id string, series *models.SeriesUpdate) error {
 	// Получаем текущий сериал из бд
 	existingSeries, err := s.repo.GetByID(context.Background(), id)
 	if err != nil {
@@ -57,7 +57,7 @@ func (s *SeriesService) Update(ctx context.Context, id string, series models.Ser
 		return errors.New("failed to update series")
 	}
 
-	return s.repo.Update(context.Background(), id, *existingSeries)
+	return s.repo.Update(context.Background(), id, existingSeries)
 }
 
 func (s *SeriesService) Delete(ctx context.Context, id string) error {

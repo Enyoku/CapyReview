@@ -27,7 +27,7 @@ func (h *SeriesHandler) CreateSeries(c *gin.Context) {
 	}
 
 	// Отправвляем полученный сериал в сервис
-	if err := h.service.Create(context.Background(), series); err != nil {
+	if err := h.service.Create(context.Background(), &series); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create series"})
 		return
 	}
@@ -57,13 +57,13 @@ func (h *SeriesHandler) UpdateSeries(c *gin.Context) {
 		return
 	}
 
-	// todo(return model)
-	if err := h.service.Update(context.Background(), id, updatedSeries); err != nil {
+	//
+	if err := h.service.Update(context.Background(), id, &updatedSeries); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update series"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	c.JSON(http.StatusOK, updatedSeries)
 }
 
 func (h *SeriesHandler) Delete(c *gin.Context) {

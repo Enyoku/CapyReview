@@ -10,9 +10,9 @@ import (
 )
 
 type SeriesRepository interface {
-	Create(ctx context.Context, series models.Series) error
+	Create(ctx context.Context, series *models.Series) error
 	GetByID(ctx context.Context, id string) (*models.Series, error)
-	Update(ctx context.Context, id string, series models.Series) error
+	Update(ctx context.Context, id string, series *models.Series) error
 	Delete(ctx context.Context, id string) error
 }
 
@@ -26,7 +26,7 @@ func NewSeriesRepository(client *mongo.Client) SeriesRepository {
 	}
 }
 
-func (s *seriesRepository) Create(ctx context.Context, series models.Series) error {
+func (s *seriesRepository) Create(ctx context.Context, series *models.Series) error {
 	_, err := s.collection.InsertOne(ctx, series)
 	return err
 }
@@ -46,7 +46,7 @@ func (s *seriesRepository) GetByID(ctx context.Context, id string) (*models.Seri
 	return &series, nil
 }
 
-func (s *seriesRepository) Update(ctx context.Context, id string, series models.Series) error {
+func (s *seriesRepository) Update(ctx context.Context, id string, series *models.Series) error {
 	objId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
