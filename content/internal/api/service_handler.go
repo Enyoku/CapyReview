@@ -3,6 +3,7 @@ package api
 import (
 	"contentService/internal/models"
 	"contentService/internal/services"
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -26,7 +27,7 @@ func (h *SeriesHandler) CreateSeries(c *gin.Context) {
 	}
 
 	// Отправвляем полученный сериал в сервис
-	if err := h.service.Create(series); err != nil {
+	if err := h.service.Create(context.Background(), series); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create series"})
 		return
 	}
@@ -37,7 +38,7 @@ func (h *SeriesHandler) CreateSeries(c *gin.Context) {
 func (h *SeriesHandler) GetSeriesById(c *gin.Context) {
 	id := c.Param("id")
 
-	val, err := h.service.GetByID(id)
+	val, err := h.service.GetByID(context.Background(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "series not found"})
 		return
@@ -57,7 +58,7 @@ func (h *SeriesHandler) UpdateSeries(c *gin.Context) {
 	}
 
 	// todo(return model)
-	if err := h.service.Update(id, updatedSeries); err != nil {
+	if err := h.service.Update(context.Background(), id, updatedSeries); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update series"})
 		return
 	}
@@ -68,7 +69,7 @@ func (h *SeriesHandler) UpdateSeries(c *gin.Context) {
 func (h *SeriesHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
 
-	if err := h.service.Delete(id); err != nil {
+	if err := h.service.Delete(context.Background(), id); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to delete series"})
 		return
 	}
