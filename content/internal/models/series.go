@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 type Season struct {
 	Number      int       `json:"number,omitempty" bson:"number"`
@@ -36,25 +39,16 @@ type SeasonUpdate struct {
 	Episodes    *int       `json:"episodes,omitempty"`
 }
 
-func (s *Series) IsValid() bool {
-	// Проверяем, что название не пустое
-	if s.Title == "" {
-		return false
-	}
-
-	// Проверяем, что описание не пустое
-	if s.Description == "" {
-		return false
-	}
-
-	// Проверяем, что дата выхода не в будущем
-	if s.ReleaseDate.After(time.Now()) {
-		return false
-	}
-
-	// Проверяем, что рейтинг находится в допустимом диапазоне
-	if s.Rating < 0 || s.Rating > 10 {
-		return false
+func (s *Series) IsValid() (bool, error) {
+	switch {
+	case s.Title == "": // Проверяем, что название не пустое
+		return false, errors.New("series titile cannot be empty")
+	case s.Description == "": // Проверяем, что описание не пустое
+		return false, errors.New("series description cannot be empty")
+	case s.ReleaseDate.After(time.Now()): // Проверяем, что дата выхода не в будущем
+		return false, errors.New("series release date cannot be in the future")
+	case s.Rating < 0 || s.Rating > 10: // Проверяем, что рейтинг находится в допустимом диапазоне
+		return false, errors.New("series rating must be between 0 and 10")
 	}
 
 	// Проверяем каждый сезон
@@ -63,25 +57,19 @@ func (s *Series) IsValid() bool {
 	}
 
 	// Все проверки пройдены
-	return true
+	return true, nil
 }
 
-func (s *Season) IsValid() bool {
-	// Проверяем, что название не пустое
-	if s.Title == "" {
-		return false
-	}
-
-	// Проверяем, что дата выхода не в будущем
-	if s.ReleaseDate.After(time.Now()) {
-		return false
-	}
-
-	// Проверяем, что рейтинг находится в допустимом диапазоне
-	if s.Rating < 0 || s.Rating > 10 {
-		return false
+func (s *Season) IsValid() (bool, error) {
+	switch {
+	case s.Title == "": // Проверяем, что название не пустое
+		return false, errors.New("season titile cannot be empty")
+	case s.ReleaseDate.After(time.Now()): // Проверяем, что дата выхода не в будущем
+		return false, errors.New("season release date cannot be in the future")
+	case s.Rating < 0 || s.Rating > 10: // Проверяем, что рейтинг находится в допустимом диапазоне
+		return false, errors.New("season rating must be between 0 and 10")
 	}
 
 	// Все проверки пройдены
-	return true
+	return true, nil
 }

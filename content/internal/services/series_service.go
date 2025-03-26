@@ -4,7 +4,6 @@ import (
 	"contentService/internal/models"
 	"contentService/internal/repositories"
 	"context"
-	"errors"
 )
 
 type SeriesService struct {
@@ -17,10 +16,10 @@ func NewSerialService(repo repositories.SeriesRepository) *SeriesService {
 
 func (s *SeriesService) Create(ctx context.Context, series *models.Series) error {
 	// Проверяем полученные данные
-	if series.IsValid() {
+	if _, err := series.IsValid(); err != nil {
 		return s.repo.Create(ctx, series)
 	} else {
-		return errors.New("invalid credentials")
+		return err
 	}
 }
 
@@ -53,8 +52,8 @@ func (s *SeriesService) Update(ctx context.Context, id string, series *models.Se
 	}
 
 	// Проверяем изменения
-	if !existingSeries.IsValid() {
-		return errors.New("failed to update series")
+	if _, err := existingSeries.IsValid(); err != nil {
+		return err
 	}
 
 	return s.repo.Update(context.Background(), id, existingSeries)
