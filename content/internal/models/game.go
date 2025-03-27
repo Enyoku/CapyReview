@@ -16,13 +16,13 @@ type Game struct {
 }
 
 type GameUpdate struct {
-	Id          string    `json:"id,omitempty"`
-	Title       string    `json:"title,omitempty"`
-	Description string    `json:"description,omitempty"`
-	Publisher   string    `json:"publisher,omitempty"`
-	Developer   string    `json:"developer,omitempty"`
-	ReleaseDate time.Time `json:"release_date,omitempty"`
-	Rating      float64   `json:"rating,omitempty"`
+	Id          *string    `json:"id,omitempty"`
+	Title       *string    `json:"title,omitempty"`
+	Description *string    `json:"description,omitempty"`
+	Publisher   *string    `json:"publisher,omitempty"`
+	Developer   *string    `json:"developer,omitempty"`
+	ReleaseDate *time.Time `json:"release_date,omitempty"`
+	Rating      *float64   `json:"rating,omitempty"`
 }
 
 func (g *Game) IsValid() (bool, error) {
