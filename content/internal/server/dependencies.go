@@ -8,14 +8,16 @@ import (
 )
 
 // TODO(add a slice or struct of services and return it)
-func initializeDependencies(db *mongo.Client) (services.MovieService, services.SeriesService, error) {
+func initializeDependencies(db *mongo.Client) (services.MovieService, services.SeriesService, services.GameService, error) {
 	//
 	movieRepo := repositories.NewMovieRepository(db)
 	seriesRepo := repositories.NewSeriesRepository(db)
+	gameRepo := repositories.NewGameRepository(db)
 
 	//
 	movieService := services.NewMovieService(movieRepo)
 	seriesService := services.NewSerialService(seriesRepo)
+	gameService := services.NewGameService(gameRepo)
 
-	return *movieService, *seriesService, nil
+	return *movieService, *seriesService, *gameService, nil
 }

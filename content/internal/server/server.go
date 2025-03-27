@@ -28,13 +28,13 @@ func New() (*Server, error) {
 	}
 
 	// Инициализация зависимостей
-	movieService, seriesService, err := initializeDependencies(db)
+	movieService, seriesService, gameService, err := initializeDependencies(db)
 	if err != nil {
 		return nil, err
 	}
 
 	// Создание API
-	api, err := api.New(movieService, seriesService)
+	api, err := api.New(movieService, seriesService, gameService)
 	if err != nil {
 		log.Fatal().Msg("")
 	}

@@ -11,14 +11,16 @@ type API struct {
 	router        *gin.Engine
 	movieService  services.MovieService
 	seriesService services.SeriesService
+	gameService   services.GameService
 }
 
-func New(movieService services.MovieService, seriesService services.SeriesService) (*API, error) {
+func New(movieService services.MovieService, seriesService services.SeriesService, gameService services.GameService) (*API, error) {
 	gin.SetMode(gin.DebugMode) // TODO(change to release)
 	api := &API{
 		router:        gin.New(),
 		movieService:  movieService,
 		seriesService: seriesService,
+		gameService:   gameService,
 	}
 	api.Endpoints()
 	return api, nil
@@ -47,7 +49,11 @@ func (a *API) Endpoints() {
 		v1.DELETE("/series/:id", seriesHandler.Delete)
 
 		// Games Handlers
-
+		gameHandler := NewGameHandler(a.gameService)
+		v1.POST("/game", gameHandler.Create)
+		v1.GET("/game/:id", gameHandler.GetByID)
+		v1.PATCH("/game/:id", gameHandler.Update)
+		v1.DELETE("/game/:id", gameHandler.Delete)
 	}
 
 }
