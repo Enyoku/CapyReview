@@ -11,9 +11,30 @@ services:
       - path: "/api/account/me"
         target: "/me"
         methods: ["GET", "PATCH", "DELETE"]
-  review_service:
+  content_service:
     url: "http://localhost:9002"
     routes:
-      - path: "/review/hi"
+      - path: "/api/v1/movies"
+        target: "/movie"
+        methods: ["GET"]
+      - path: "/api/v1/movies/:id"
+        target: "/movie"
+        methods: ["POST", "PATCH", "DELETE"]
+      - path: "/api/v1/series"
+        target: "/series"
+        methods: ["GET"]
+      - path: "/api/v1/series/:id"
+        target: "/series"
+        methods: ["POST", "PATCH", "DELETE"]
+      - path: "/api/v1/games"
+        target: "/game"
+        methods: ["GET"]
+      - path: "/api/v1/games/:id"
+        target: "/game"
+        methods: ["POST", "PATCH", "DELETE"]
+    review_service:
+      url: "http://localhost:9003"
+      routes:
+      - path: "/api/v1/test"
         target: "/test"
         methods: ["GET"]
